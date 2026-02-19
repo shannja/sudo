@@ -1,0 +1,8 @@
+module sudo_os
+typeinfo appsudo_os.qmltypes
+prefer :/qt/qml/sudo_os/
+Main 254.0 Main.qml
+Splash 254.0 screens/Splash.qml
+Desktop 254.0 screens/Desktop.qml
+depends QtQuick
+

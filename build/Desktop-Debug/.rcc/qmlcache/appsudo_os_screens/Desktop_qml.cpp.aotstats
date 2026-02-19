@@ -1,0 +1,23 @@
+{
+    "formatRevision": 1,
+    "modules": [
+        {
+            "moduleFiles": [
+                {
+                    "entries": [
+                        {
+                            "codegenResult": 0,
+                            "column": 19,
+                            "durationMicroseconds": 0,
+                            "functionName": "fill",
+                            "line": 6,
+                            "message": ""
+                        }
+                    ],
+                    "filePath": "/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/screens/Desktop.qml"
+                }
+            ],
+            "moduleId": "sudo_os(appsudo_os)"
+        }
+    ]
+}

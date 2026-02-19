@@ -1,0 +1,16 @@
+-rootPath
+/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source
+-cmake-output
+-output-file
+/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/build/Desktop-Debug/.qt/qml_imports/appsudo_os_build.cmake
+-importPath
+/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/build/Desktop-Debug
+-importPath
+/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/build/Desktop-Debug/sudo_os
+-importPath
+/usr/lib/qt6/qml
+-qrcFiles
+/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/build/Desktop-Debug/.qt/rcc/qmake_sudo_os.qrc
+/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/build/Desktop-Debug/.qt/rcc/appsudo_os_raw_qml_0.qrc
+/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/build/Desktop-Debug/.qt/rcc/appsudo_os_raw_res_0.qrc
+/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/build/Desktop-Debug/.qt/rcc/appsudo_os_raw_qml_0_extra_qmldirs.qrc

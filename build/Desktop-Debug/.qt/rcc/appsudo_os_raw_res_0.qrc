@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt/qml/sudo_os/">
+    <file alias="textures/logo/sudo_logo.png">/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/textures/logo/sudo_logo.png</file>
+  </qresource>
+</RCC>
+
