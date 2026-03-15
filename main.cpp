@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<TerminalBridge>("SudoVM.Core", 1, 0, "TerminalBridge");
 
     // 4. Load the Main QML file from the module
-    engine.loadFromModule("Sudo_OS", "Main");
+    engine.loadFromModule("SudoVM", "Main");
 
     // 5. Enter the main event loop
     return app.exec();

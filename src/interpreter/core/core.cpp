@@ -90,6 +90,22 @@ QString Core::resolveValue(const QString &rawVal, const QMap<QString, Variable> 
 }
 
 QString Core::remove(const Instruction &inst, QMap<QString, Variable> &memory) {
+    // 1. Check for "MEM" (Full Purge)
+    // We check the first argument: DEL MEM
+    if (!inst.arguments.isEmpty()) {
+        QString firstArg = inst.arguments.first().value.toUpper();
+
+        // Using your systemIdentifiersMap to stay consistent with the VM's reserved words
+        if (systemIdentifiersMap.contains(firstArg) &&
+            systemIdentifiersMap.value(firstArg) == CMD_VARIABLES) {
+
+            int count = memory.size();
+            memory.clear();
+            return "[PURGED] Total Memory Wipe. " + QString::number(count) + " variables removed.";
+        }
+    }
+
+    // 2. Standard Individual Deletion Logic
     QStringList failedDeletions;
     int purgedCount = 0;
 

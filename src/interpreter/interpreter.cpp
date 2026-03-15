@@ -39,7 +39,6 @@ QString Interpreter::executeScript(QMap<QString, Variable> &memory) {
     while (m_currentLineIndex < m_scriptLines.size()) {
         QString trimmedLine = m_scriptLines[m_currentLineIndex].trimmed();
 
-        // Skip empty lines or comments starting with '#'
         if (trimmedLine.isEmpty() || trimmedLine.startsWith("#")) {
             m_currentLineIndex++;
             continue;
@@ -48,48 +47,41 @@ QString Interpreter::executeScript(QMap<QString, Variable> &memory) {
         auto tokens = tokenize(trimmedLine);
         auto command = parse(tokens);
 
-        // If the Parser flagged the instruction as invalid (Case mismatch, wrong syntax, etc.)
         if (!command.isValid) {
             outputLog.append("[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": Invalid syntax or case violation.");
-            m_currentLineIndex++;
-            continue;
+            return outputLog.join("\n"); // Return log so far + error
         }
 
+        // --- CONTROL FLOW ---
+
         if (command.action == CMD_IF) {
-            // 1. Strict Existence Check
             if (!memory.contains(command.name)) {
-                return "[ERROR] Line " + QString::number(m_currentLineIndex + 1) +
-                       ": IF condition variable '" + command.name + "' not found.";
+                outputLog.append("[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": Variable '" + command.name + "' not found.");
+                return outputLog.join("\n");
             }
-
-            // 2. Strict Type Check (Optional but recommended)
-            if (memory[command.name].type != "BOOL") {
-                return "[ERROR] Line " + QString::number(m_currentLineIndex + 1) +
-                       ": IF requires a BOOL variable. '" + command.name + "' is " + memory[command.name].type;
-            }
-
-            bool condition = (memory[command.name].value == "true");
-            if (!condition) {
+            if (memory[command.name].value != "true") {
                 if (!skipBlock(false)) {
-                    return "[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": IF block never closed.";
+                    outputLog.append("[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": IF block never closed.");
+                    return outputLog.join("\n");
                 }
             }
             m_currentLineIndex++;
             continue;
         }
         else if (command.action == CMD_ELSE) {
-            // If we hit ELSE manually, it means we just finished the 'True' part
-            // of an IF. We must now skip the 'False' part until we find ENDIF.
             if (!skipBlock(true)) {
                 outputLog.append("[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": ELSE without ENDIF.");
-                break;
+                return outputLog.join("\n");
             }
             m_currentLineIndex++;
             continue;
         }
-        else if (command.action == CMD_ENDIF) {
-            // ADD THIS: Simply consume the token and move to the next line.
-            m_currentLineIndex++;
+        else if (command.action == CMD_ENDIF || command.action == CMD_ENDFUNC) {
+            if (command.action == CMD_ENDFUNC && !m_callStack.isEmpty()) {
+                m_currentLineIndex = m_callStack.pop();
+            } else {
+                m_currentLineIndex++;
+            }
             continue;
         }
         else if (command.action == CMD_WHILE) {
@@ -98,87 +90,66 @@ QString Interpreter::executeScript(QMap<QString, Variable> &memory) {
                 m_loopStack.push(m_currentLineIndex);
                 m_currentLineIndex++;
             } else {
-                // SAFETY: Catch unclosed WHILE blocks
                 if (!skipBlock(false)) {
                     outputLog.append("[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": WHILE block never closed.");
-                    break;
+                    return outputLog.join("\n");
                 }
                 m_currentLineIndex++;
             }
             continue;
         }
         else if (command.action == CMD_ENDWHILE) {
-            // SAFETY: Check for Orphaned ENDWHILE
             if (m_loopStack.isEmpty()) {
-                outputLog.append("[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": ENDWHILE found without a matching WHILE.");
-                m_currentLineIndex++;
-            } else {
-                m_currentLineIndex = m_loopStack.pop();
+                outputLog.append("[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": Orphaned ENDWHILE.");
+                return outputLog.join("\n");
             }
+            m_currentLineIndex = m_loopStack.pop();
             continue;
         }
-
-        if (command.action == CMD_FUNC) {
-            // 1. Register the function's location in our Map
+        else if (command.action == CMD_FUNC) {
             m_functionMap[command.name] = m_currentLineIndex;
-
-            // 2. SKIP the block so it doesn't execute during the Definition Phase
-            if (!skipBlock(false)) {
-                return "[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": FUNC never closed.";
+            skipBlock(false);
+            m_currentLineIndex++;
+            continue;
+        }
+        else if (command.action == CMD_CALL) {
+            if (!m_functionMap.contains(command.name)) {
+                outputLog.append("[ERROR] Function '" + command.name + "' not found.");
+                return outputLog.join("\n");
             }
-            // skipBlock leaves us on the ENDFUNC line, so move to the next
+            if (m_callStack.size() >= MAX_STACK_DEPTH) {
+                outputLog.append("[ERROR] Stack Overflow at Line " + QString::number(m_currentLineIndex + 1));
+                return outputLog.join("\n");
+            }
+            m_callStack.push(m_currentLineIndex + 1);
+            m_currentLineIndex = m_functionMap[command.name] + 1; // Jump inside the func
+            continue;
+        }
+        else if (command.action == CMD_CLEAR) {
+            outputLog.clear(); // Actually clears the terminal buffer
             m_currentLineIndex++;
             continue;
         }
 
-        else if (command.action == CMD_CALL) {
-            if (!m_functionMap.contains(command.name)) {
-                return "[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": Function '" + command.name + "' not found.";
-            }
-
-            if (m_callStack.size() >= MAX_STACK_DEPTH) {
-                return "[ERROR] Stack Overflow: Recursion depth exceeded " +
-                       QString::number(MAX_STACK_DEPTH) + " calls.";
-            }
-
-            // PUSH the return address (the line AFTER the CALL)
-            m_callStack.push(m_currentLineIndex + 1);
-
-            // JUMP to the function
-            m_currentLineIndex = m_functionMap[command.name];
-            continue;
-        }
-
-        else if (command.action == CMD_ENDFUNC) {
-            if (m_callStack.isEmpty()) {
-                // If we hit this without a CALL, just move on (safety)
-                m_currentLineIndex++;
-            } else {
-                // POP the return address and go back
-                m_currentLineIndex = m_callStack.pop();
-            }
-            continue;
-        }
+        // --- EXECUTION ---
 
         QString res = execute(command, memory);
 
         if (res.startsWith("[SIGNAL_INPUT_REQUIRED]")) {
-            QString previousOutputs = outputLog.join("\n");
-            if (!previousOutputs.isEmpty()) {
-                // Ensure there is a clean newline between output and signal
-                return previousOutputs + "\n" + res;
-            }
-            return res;
+            return outputLog.join("\n") + (outputLog.isEmpty() ? "" : "\n") + res;
         }
 
-        // Standard logging logic
-        bool isError = res.startsWith("[ERROR]");
+        if (res.startsWith("[ERROR]")) {
+            outputLog.append(res);
+            return outputLog.join("\n");
+        }
+
+        // Only log commands meant for the user
         bool isExplicitOutput = (command.action == CMD_OUTPUT ||
                                  command.action == CMD_READ   ||
-                                 command.action == CMD_HELP   ||
-                                 command.action == CMD_CLEAR);
+                                 command.action == CMD_HELP);
 
-        if (isError || isExplicitOutput) {
+        if (isExplicitOutput && !res.isEmpty()) {
             outputLog.append(res);
         }
 
