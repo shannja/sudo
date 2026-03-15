@@ -13,6 +13,11 @@ QString Interpreter::process(QString rawInput, QMap<QString, Variable> &memory) 
     m_scriptLines = rawInput.split(QRegularExpression("[\r\n]+"), Qt::SkipEmptyParts);
     m_currentLineIndex = 0;
 
+    // CLEAR PERSISTENT STATE FOR NEW RUN
+    m_callStack.clear();
+    m_functionMap.clear();
+    m_loopStack.clear();
+
     if (m_scriptLines.isEmpty()) return "";
 
     // 2. VALIDATION PASS: Ensure all IF/WHILE blocks are balanced before executing.
@@ -112,6 +117,49 @@ QString Interpreter::executeScript(QMap<QString, Variable> &memory) {
             }
             continue;
         }
+
+        if (command.action == CMD_FUNC) {
+            // 1. Register the function's location in our Map
+            m_functionMap[command.name] = m_currentLineIndex;
+
+            // 2. SKIP the block so it doesn't execute during the Definition Phase
+            if (!skipBlock(false)) {
+                return "[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": FUNC never closed.";
+            }
+            // skipBlock leaves us on the ENDFUNC line, so move to the next
+            m_currentLineIndex++;
+            continue;
+        }
+
+        else if (command.action == CMD_CALL) {
+            if (!m_functionMap.contains(command.name)) {
+                return "[ERROR] Line " + QString::number(m_currentLineIndex + 1) + ": Function '" + command.name + "' not found.";
+            }
+
+            if (m_callStack.size() >= MAX_STACK_DEPTH) {
+                return "[ERROR] Stack Overflow: Recursion depth exceeded " +
+                       QString::number(MAX_STACK_DEPTH) + " calls.";
+            }
+
+            // PUSH the return address (the line AFTER the CALL)
+            m_callStack.push(m_currentLineIndex + 1);
+
+            // JUMP to the function
+            m_currentLineIndex = m_functionMap[command.name];
+            continue;
+        }
+
+        else if (command.action == CMD_ENDFUNC) {
+            if (m_callStack.isEmpty()) {
+                // If we hit this without a CALL, just move on (safety)
+                m_currentLineIndex++;
+            } else {
+                // POP the return address and go back
+                m_currentLineIndex = m_callStack.pop();
+            }
+            continue;
+        }
+
         QString res = execute(command, memory);
 
         if (res.startsWith("[SIGNAL_INPUT_REQUIRED]")) {
@@ -157,7 +205,7 @@ QString Interpreter::validateBlocks() {
         QString cmd = tokens[0].value.toUpper();
 
         // 1. Track Block Openings
-        if (cmd == "IF" || cmd == "WHILE") {
+        if (cmd == "IF" || cmd == "WHILE" || cmd == "FUNC") {
             blockStack.push(cmd + " (Line " + QString::number(i + 1) + ")");
         }
         // 2. Validate Block Closings
@@ -170,6 +218,12 @@ QString Interpreter::validateBlocks() {
         else if (cmd == "ENDWHILE") {
             if (blockStack.isEmpty() || !blockStack.top().startsWith("WHILE")) {
                 return "[SYNTAX_ERROR] ENDWHILE without matching WHILE at line " + QString::number(i + 1);
+            }
+            blockStack.pop();
+        }
+        else if (cmd == "ENDFUNC") {
+            if (blockStack.isEmpty() || !blockStack.top().startsWith("FUNC")) {
+                return "[SYNTAX_ERROR] ENDFUNC without matching FUNC at line " + QString::number(i + 1);
             }
             blockStack.pop();
         }
@@ -202,10 +256,10 @@ bool Interpreter::skipBlock(bool skipToEndIf) {
         QString cmd = tokens[0].value.toUpper();
 
         // Track internal nesting so we don't exit early on a sub-block
-        if (cmd == "IF" || cmd == "WHILE") {
+        if (cmd == "IF" || cmd == "WHILE" || cmd == "FUNC") {
             nestingLevel++;
         }
-        else if (cmd == "ENDIF" || cmd == "ENDWHILE") {
+        else if (cmd == "ENDIF" || cmd == "ENDWHILE" || cmd == "ENDFUNC") {
             if (nestingLevel > 0) {
                 nestingLevel--;
             } else {
@@ -452,6 +506,24 @@ Instruction Interpreter::parse(QVector<Token> tokens) {
         break;
 
     case CMD_ENDWHILE:
+        if (tokens.size() == 1) inst.isValid = true;
+        break;
+
+    case CMD_FUNC: // FUNC [NAME]
+        if (tokens.size() == 2) {
+            inst.name = tokens[1].value; // The function name
+            inst.isValid = true;
+        }
+        break;
+
+    case CMD_CALL: // CALL [NAME]
+        if (tokens.size() == 2) {
+            inst.name = tokens[1].value; // The function to jump to
+            inst.isValid = true;
+        }
+        break;
+
+    case CMD_ENDFUNC: // ENDFUNC (no args)
         if (tokens.size() == 1) inst.isValid = true;
         break;
 

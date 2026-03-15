@@ -4,7 +4,7 @@
 #include "src/bridges/terminal/terminalbridge.h"
 
 /**
- * @brief Entry point for Sudo_OS.
+ * @brief Entry point for Sudo_VM.
  * This file initializes the Qt application, loads the QML UI,
  * and injects the Kernel into the QML context.
  */
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
      * @brief Initiate connection
      * Registers the bridges to QML.
      */
-    qmlRegisterType<TerminalBridge>("SudoOS.Core", 1, 0, "TerminalBridge");
+    qmlRegisterType<TerminalBridge>("SudoVM.Core", 1, 0, "TerminalBridge");
 
     // 4. Load the Main QML file from the module
     engine.loadFromModule("Sudo_OS", "Main");

@@ -26,6 +26,11 @@ const QMap<QString, Commands> commandMap = {
     {"WHILE", CMD_WHILE},
     {"ENDWHILE", CMD_ENDWHILE},
 
+    // Grouping commands.
+    {"FUNC", CMD_FUNC},
+    {"ENDFUNC", CMD_ENDFUNC},
+    {"CALL", CMD_CALL},
+
     // Separate entity commands that does a specific action for a time.
     {"MATH", CMD_MATH},
     {"LGC", CMD_LOGIC},

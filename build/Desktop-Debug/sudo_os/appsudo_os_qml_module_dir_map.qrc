@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/">
-    <file alias="/qt/qml/sudo_os">/run/media/shannja/d3b07368-19cd-4ee8-90c3-937b9b0f1815/@home/sudo_os/sudo_os_source/build/Desktop-Debug/sudo_os</file>
-
-  </qresource>
-</RCC>

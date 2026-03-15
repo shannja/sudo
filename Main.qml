@@ -7,9 +7,9 @@ Window {
 
     // Global Personalization.
     // --- System Constants ---
-    readonly property string assetRoot: "qrc:/qt/qml/Sudo_OS/assets/"
+    readonly property string assetRoot: "qrc:/qt/qml/SudoVM/assets/"
     readonly property string themePath: assetRoot + "textures/personalization/theme/"
-    readonly property string componentRoot: "qrc:/qt/qml/Sudo_OS/elements/"
+    readonly property string componentRoot: "qrc:/qt/qml/SudoVM/elements/"
 
     // --- Theme Toggle ---
     property bool isDarkMode: true
@@ -40,9 +40,10 @@ Window {
     property int topZIndex: 1
 
     visibility: Window.FullScreen
-    flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    // Comment for fullscreen.
+    // flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
 
-    title: qsTr("Sudo_OS")
+    title: qsTr("Sudo VM")
 
     // ------------------------------- //
 

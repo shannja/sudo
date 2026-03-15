@@ -29,11 +29,12 @@ public:
 
 private:
     // --- PERSISTENT STATE ---
+    const int MAX_STACK_DEPTH = 100;     // Anti-infinite recursion
     int m_currentLineIndex = 0;          // The "Instruction Pointer"
     QStringList m_scriptLines;           // The loaded script in memory
     QStack<int> m_loopStack;             // For lookback on iterative commands (WHILE)
-    QMap<QString, int> m_functionTable;  // Store name -> line_index
-    QStack<int> m_returnStack;           // Store where to jump back to
+    QMap<QString, int> m_functionMap;    // Store name -> line_index
+    QStack<int> m_callStack;             // Store where to jump back to
 
     /**
      * @brief The main execution loop that iterates through m_scriptLines.
