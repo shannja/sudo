@@ -47,6 +47,7 @@ qt_add_qml_module(appSudoVM
         src/interpreter/math/math.h src/interpreter/math/math.cpp
         src/bridges/terminal/terminalbridge.h src/bridges/terminal/terminalbridge.cpp
         SOURCES src/interpreter/logic/logic.h src/interpreter/logic/logic.cpp
+        SOURCES src/interpreter/filesystem/filesystem.h src/interpreter/filesystem/filesystem.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

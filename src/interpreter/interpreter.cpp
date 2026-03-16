@@ -37,6 +37,12 @@ QString Interpreter::executeScript(QMap<QString, Variable> &memory) {
     QStringList outputLog;
 
     while (m_currentLineIndex < m_scriptLines.size()) {
+
+        instructionCount++;
+        if (instructionCount > MAX_INSTRUCTIONS) {
+            return outputLog.join("\n") + "\n[ERROR] CPU limit exceeded: Potential infinite loop.";
+        }
+
         QString trimmedLine = m_scriptLines[m_currentLineIndex].trimmed();
 
         if (trimmedLine.isEmpty() || trimmedLine.startsWith("#")) {

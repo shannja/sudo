@@ -29,7 +29,8 @@ public:
 
 private:
     // --- PERSISTENT STATE ---
-    const int MAX_STACK_DEPTH = 100;     // Anti-infinite recursion
+    const int MAX_STACK_DEPTH = 65536;   // Anti-infinite recursion
+    const int MAX_INSTRUCTIONS = 65536;  // Maximum instructions
     int m_currentLineIndex = 0;          // The "Instruction Pointer"
     QStringList m_scriptLines;           // The loaded script in memory
     QStack<int> m_loopStack;             // For lookback on iterative commands (WHILE)
