@@ -127,6 +127,7 @@ QString Interpreter::executeScript(QMap<QString, Variable> &memory) {
         }
         else if (command.action == CMD_CLEAR) {
             outputLog.clear(); // Actually clears the terminal buffer
+            outputLog.append("[SIGNAL_CLEAR_LOG]");
             m_currentLineIndex++;
             continue;
         }

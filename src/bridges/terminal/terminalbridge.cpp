@@ -5,7 +5,7 @@
  */
 void TerminalBridge::sendCommand(const QString &input) {
     QString result;
-    bool wasCleared = false; // Local flag for this execution
+    bool wasCleared = false;
 
     if (m_isWaiting) {
         QString currentVar = m_waitingForVar;
@@ -20,26 +20,25 @@ void TerminalBridge::sendCommand(const QString &input) {
         result = m_kernel.handleCommand(input);
     }
 
-    // Process results and signals
     QStringList lines = result.split("\n", Qt::SkipEmptyParts);
     for (const QString& line : std::as_const(lines)) {
         QString cleanLine = line.trimmed();
 
         if (cleanLine == "[SIGNAL_CLEAR_LOG]") {
             m_log.clear();
-            wasCleared = true; // Mark that we shouldn't show "Finished"
+            wasCleared = true;
         } else if (cleanLine.startsWith("[SIGNAL_INPUT_REQUIRED]")) {
             m_waitingForVar = cleanLine.split(":")[1];
             m_isWaiting = true;
             m_log.append("INPUT_REQUEST:" + m_waitingForVar);
         } else {
-            m_log.append("> " + line);
+            m_log.append("> " + cleanLine);
         }
     }
 
-    // ALWAYS add the finished message unless we cleared the screen
-    // or we are currently paused waiting for more input.
-    if (!wasCleared && !m_isWaiting) {
+    // Handshake check: Don't show "Finished" if the screen was just wiped
+    // or if the user needs to type something.
+    if (!wasCleared && !m_isWaiting && !result.isEmpty()) {
         m_log.append("> Program Finished...");
     }
 
