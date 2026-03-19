@@ -12,6 +12,9 @@
  */
 class Core {
 public:
+
+    typedef QString (*CoreAction)(const Instruction&, QMap<QString, Variable>&);
+
     /**
      * @brief Main entry point for the Core Ring.
      * Routes the instruction to create, remove, or change functions based on the Action.
@@ -25,6 +28,8 @@ public:
     static QString resolveValue(const QString &rawVal, const QMap<QString, Variable> &memory);
 
 private:
+    static const QMap<Commands, CoreAction> operations;
+
     /**
      * @brief Logic for 'NEW' command.
      * Validates if the variable already exists before allocation.

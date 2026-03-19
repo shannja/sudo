@@ -14,6 +14,8 @@
  */
 class Math {
 public:
+    typedef double (*MathOP)(const QList<double>&);
+
     /**
      * @brief Entry point for all MATH commands.
      * Routes the instruction to the correct arithmetic handler.
@@ -22,6 +24,9 @@ public:
     static QString execute(const Instruction &inst, QMap<QString, Variable> &memory);
 
 private:
+
+    static const QMap<MathOperations, MathOP> operations;
+
     /**
      * @brief Arithmetic Handlers
      * These take a list of doubles and return the calculated result.

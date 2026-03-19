@@ -218,7 +218,7 @@ Item {
                             // STYLE LOGIC:
                             // Italicize if it starts with ">" (System Output / Finished message)
                             // Keep normal if it is history (User input) or an active input prompt
-                            font.italic: model.line.startsWith(">")
+                            //font.italic: model.line.startsWith(">")
 
                             Layout.fillWidth: false
                         }

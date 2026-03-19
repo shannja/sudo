@@ -1,12 +1,16 @@
 #include "core.h"
 
+const QMap<Commands, Core::CoreAction> Core::operations = {
+    {CMD_CREATE, Core::create},
+    {CMD_UPDATE, Core::change},
+    {CMD_DELETE, Core::remove}
+};
+
 QString Core::execute(const Instruction &inst, QMap<QString, Variable> &memory) {
-    switch(inst.action) {
-    case CMD_CREATE: return create(inst, memory);
-    case CMD_DELETE: return remove(inst, memory);
-    case CMD_UPDATE: return change(inst, memory);
-    default: return "[ERROR] Invalid Core action.";
+    if (operations.contains(inst.action)) {
+        return operations[inst.action](inst, memory);
     }
+    return "[ERROR] Invalid Core action.";
 }
 
 QString Core::create(const Instruction &inst, QMap<QString, Variable> &memory) {
@@ -15,7 +19,7 @@ QString Core::create(const Instruction &inst, QMap<QString, Variable> &memory) {
     // 1. Naming Rules
     if (!inst.name.isEmpty() && inst.name[0].isDigit())
         return "[ERROR] Name cannot start with a digit.";
-    if (reservedWords.contains(inst.name.toUpper()))
+    if (reservedWords.contains(inst.name))
         return "[ERROR] '" + inst.name + "' is a reserved keyword.";
     if (memory.contains(inst.name))
         return "[ERROR] Variable already exists. Use UPD.";
@@ -67,25 +71,42 @@ QString Core::validateType(DataTypes type, const QString &val) {
     return "";
 }
 
-// Helper to determine if a string is a variable or a literal
-// Now returns a special [ERROR] prefix if a variable reference is invalid
+/**
+ * @brief Helper to determine if a string is a variable or a literal.
+ * Now correctly handles String Literals wrapped in quotes.
+ */
 QString Core::resolveValue(const QString &rawVal, const QMap<QString, Variable> &memory) {
-    // 1. If it's in memory, return the value
+    if (rawVal.isEmpty()) return "";
+
+    // 1. STRING LITERAL CHECK (Highest Priority)
+    // If it's wrapped in quotes, it's definitely NOT a variable name.
+    if (rawVal.startsWith("\"") && rawVal.endsWith("\"")) {
+        return rawVal.mid(1, rawVal.length() - 2);
+    }
+
+    // 2. BOOLEAN LITERAL CHECK
+    if (rawVal.toLower() == "true" || rawVal.toLower() == "false") {
+        return rawVal.toLower();
+    }
+
+    // 3. NUMERIC LITERAL CHECK
+    // If it's a valid number, it's a value, not a variable.
+    bool isNum;
+    rawVal.toDouble(&isNum);
+    if (isNum) return rawVal;
+
+    // 4. MEMORY LOOKUP (Variable Check)
+    // If we find it in the map, return the stored value.
     if (memory.contains(rawVal)) {
         return memory[rawVal].value;
     }
 
-    // 2. EXCEPTION: Check if it is a boolean literal before checking if it's a variable
-    if (rawVal == "true" || rawVal == "false") {
-        return rawVal;
-    }
-
-    // 3. Strict Check: If it starts with a letter, it must be a variable
-    if (!rawVal.isEmpty() && rawVal[0].isLetter()) {
+    // 5. UNDEFINED REFERENCE (The Fallback)
+    // If it starts with a letter but wasn't in quotes or memory, it's a broken ref.
+    if (rawVal[0].isLetter()) {
         return "[UNDEFINED_REF]:" + rawVal;
     }
 
-    // 4. Otherwise, it's a numeric literal or string
     return rawVal;
 }
 

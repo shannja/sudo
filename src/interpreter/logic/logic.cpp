@@ -1,12 +1,20 @@
 #include "logic.h"
 #include "../core/core.h"
 
-/**
- * @brief Function pointer type for logic operations.
- * * Both logic and comparison are added for much easier comp.
- */
-typedef bool (*CompareOP)(const double& arg1, const double& arg2);
-typedef bool (*LogicOP)(const bool& arg1, const bool& arg2);
+const QMap<CompareOperations, Logic::CompareOP> Logic::comp_operations = {
+    {CMD_EQUAL, Logic::equal},
+    {CMD_NEQUAL, Logic::notEqual},
+    {CMD_GREATER_THAN, Logic::greaterThan},
+    {CMD_LESS_THAN, Logic::lessThan},
+    {CMD_GREATER_THAN_EQUAL, Logic::greaterThanEqual},
+    {CMD_LESS_THAN_EQUAL, Logic::lessThanEqual}
+};
+
+const QMap<LogicOperations, Logic::LogicOP> Logic::logic_operations = {
+    {CMD_AND, Logic::andOperator},
+    {CMD_NOT, Logic::notOperator},
+    {CMD_OR, Logic::orOperator}
+};
 
 /**
  * @brief Executes comparision and logical operations and coordinates with the Core for storage.
@@ -16,21 +24,6 @@ typedef bool (*LogicOP)(const bool& arg1, const bool& arg2);
  * 3. Creates a NEW instruction to give to the Core to save the result.
  */
 QString Logic::execute(const Instruction &inst, QMap<QString, Variable> &memory) {
-
-    static const QMap<CompareOperations, CompareOP> comp_operations = {
-        {CMD_EQUAL, Logic::equal},
-        {CMD_NEQUAL, Logic::notEqual},
-        {CMD_GREATER_THAN, Logic::greaterThan},
-        {CMD_LESS_THAN, Logic::lessThan},
-        {CMD_GREATER_THAN_EQUAL, Logic::greaterThanEqual},
-        {CMD_LESS_THAN_EQUAL, Logic::lessThanEqual}
-    };
-
-    static const QMap<LogicOperations, LogicOP> logic_operations = {
-        {CMD_AND, Logic::andOperator},
-        {CMD_NOT, Logic::notOperator},
-        {CMD_OR, Logic::orOperator}
-    };
 
     // 1. Validate target variable exists and is a BOOL
     if (!memory.contains(inst.name)) return "[ERROR] Logic: Target '" + inst.name + "' not found.";

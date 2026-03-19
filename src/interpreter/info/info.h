@@ -12,6 +12,8 @@
  */
 class Info {
 public:
+    typedef QString (*InfoOP)(const Instruction&, QMap<QString, Variable>&);
+
     /**
      * @brief Entry point for the Info Ring.
      * Routes to echo (OUT), list (READ), help (HELP), or input (IN).
@@ -19,6 +21,8 @@ public:
     static QString execute(const Instruction &inst, QMap<QString, Variable> &memory);
 
 private:
+    static const QMap<Commands, InfoOP> operations;
+
     /**
      * @brief Logic for 'OUT'.
      * Concatenates literals and variable values into a single display string.

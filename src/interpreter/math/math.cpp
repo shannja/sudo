@@ -2,10 +2,14 @@
 #include "../core/core.h"
 #include <cmath>
 
-/**
- * @brief Function pointer type for math operations.
- */
-typedef double (*MathOP)(const QList<double>&);
+const QMap<MathOperations, Math::MathOP> Math::operations = {
+    {CMD_ADDITION,        Math::add},
+    {CMD_SUBTRACTION,     Math::sub},
+    {CMD_MULTIPLICATION,  Math::mul},
+    {CMD_DIVISION,        Math::div},
+    {CMD_RAISE_TO_POWER,  Math::power},
+    {CMD_SQUARE_ROOT,     Math::root}
+};
 
 /**
  * @brief Executes mathematical operations and coordinates with the Core for storage.
@@ -43,15 +47,6 @@ QString Math::execute(const Instruction &inst, QMap<QString, Variable> &memory) 
     MathOperations opType = mathOperationsMap.value(inst.value, CMD_MATH_INVALID);
 
     // 3. DISPATCH MAP: Routes the operation to the specific helper function.
-    static const QMap<MathOperations, MathOP> operations = {
-        {CMD_ADDITION,        Math::add},
-        {CMD_SUBTRACTION,     Math::sub},
-        {CMD_MULTIPLICATION,  Math::mul},
-        {CMD_DIVISION,        Math::div},
-        {CMD_RAISE_TO_POWER,  Math::power},
-        {CMD_SQUARE_ROOT,     Math::root}
-    };
-
     if (!operations.contains(opType))
         return "[ERROR] Unknown math operation: " + inst.value;
 

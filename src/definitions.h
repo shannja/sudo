@@ -8,6 +8,8 @@
 #include <QRegularExpression>
 #include <QVariant>
 #include <QStack>
+#include <QDir>
+#include <QCoreApplication>
 
 /**
  * @struct Variable
@@ -57,14 +59,16 @@ enum Commands {
 
     CMD_CLEAR,
 
-    CMD_MATH, CMD_LOGIC,
+    CMD_RECORD, CMD_STOP_RECORD, CMD_EXECUTE,
+
+    CMD_MATH, CMD_LOGIC, CMD_FILE_SYSTEM, CMD_SYSTEM_PROPERTIES, CMD_GRAPHICS
 };
 
-enum Types { CMD_VARIABLE };
+enum Types { CMD_VARIABLE, CMD_SCRIPT };
 
 enum DataTypes { CMD_NUMBER, CMD_STRING, CMD_BOOLEAN };
 
-enum SystemIdentifiers { CMD_ENDLINE, CMD_VARIABLES };
+enum SystemIdentifiers { CMD_ENDLINE, CMD_VARIABLES, CMD_ROOT_DIRECTORY };
 
 enum MathOperations {
     CMD_MATH_INVALID = -1,
@@ -80,6 +84,12 @@ enum CompareOperations {
 enum LogicOperations {
     CMD_LOGIC_INVALID = -1,
     CMD_NOT, CMD_AND, CMD_OR
+};
+
+enum FileSystemOperations {
+    CMD_FILE_SYSTEM_INVALID = -1,
+    CMD_MAKE_DIRECTORY, CMD_RENAME_DIRECTORY, CMD_REMOVE_DIRECTORY,
+    CMD_CHANGE_DIRECTORY,
 };
 
 /**
@@ -111,6 +121,7 @@ extern const QMap<QString, SystemIdentifiers> systemIdentifiersMap;
 extern const QMap<QString, MathOperations> mathOperationsMap;
 extern const QMap<QString, CompareOperations> compareOperationsMap;
 extern const QMap<QString, LogicOperations> logicOperationsMap;
+extern const QMap<QString, FileSystemOperations> fileSystemOperationsMap;
 extern const QStringList reservedWords;
 
 #endif // DEFINITIONS_H

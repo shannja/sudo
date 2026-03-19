@@ -11,6 +11,9 @@
  */
 class Logic {
 public:
+    typedef bool (*CompareOP)(const double& arg1, const double& arg2);
+    typedef bool (*LogicOP)(const bool& arg1, const bool& arg2);
+
     /**
      * @brief Entry point for all LOGIC commands.
      * Routes the instruction to the correct comparison or logical handler.
@@ -19,6 +22,10 @@ public:
     static QString execute(const Instruction &inst, QMap<QString, Variable> &memory);
 
 private:
+
+    static const QMap<CompareOperations, CompareOP> comp_operations;
+    static const QMap<LogicOperations, LogicOP> logic_operations;
+
     /**
      * @brief Logic Handlers
      * These compares the two num or str variables and provide a boolean value.

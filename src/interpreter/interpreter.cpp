@@ -3,6 +3,7 @@
 #include "info/info.h"
 #include "math/math.h"
 #include "logic/logic.h"
+#include "filesystem/filesystem.h"
 
 /**
  * @brief Entry point for script execution.
@@ -35,6 +36,7 @@ QString Interpreter::process(QString rawInput, QMap<QString, Variable> &memory) 
  */
 QString Interpreter::executeScript(QMap<QString, Variable> &memory) {
     QStringList outputLog;
+    int instructionCount = 0;
 
     while (m_currentLineIndex < m_scriptLines.size()) {
 
@@ -286,13 +288,11 @@ QString Interpreter::resume(QString userInput, QString targetVar, QMap<QString, 
  * but the Parser enforces the STRICT CASE rule.
  */
 Token::Type Interpreter::identifyType(const QString &text) {
-    QString upperText = text.toUpper();
-
     // Check Maps
-    if (commandMap.contains(upperText)) return Token::KEYWORD;
-    if (typeMap.contains(upperText))    return Token::TYPE;
-    if (dataTypeMap.contains(upperText)) return Token::DATA_TYPE;
-    if (systemIdentifiersMap.contains(upperText)) return Token::IDENTIFIER;
+    if (commandMap.contains(text))           return Token::KEYWORD;
+    if (typeMap.contains(text))              return Token::TYPE;
+    if (dataTypeMap.contains(text))          return Token::DATA_TYPE;
+    if (systemIdentifiersMap.contains(text)) return Token::IDENTIFIER;
 
     // Numeric Literals
     bool isNum;
@@ -329,6 +329,7 @@ QVector<Token> Interpreter::tokenize(QString input) {
         }
 
         if (c == '\"') {
+            current.append(c);
             if (inQuotes) {
                 tokens.append({Token::STRING, current});
                 current.clear();
@@ -371,15 +372,14 @@ Instruction Interpreter::parse(QVector<Token> tokens) {
 
     // --- RULE: STRICT KEYWORD CASE ---
     QString rawVerb = tokens[0].value;
-    QString upperVerb = rawVerb.toUpper();
 
-    if (commandMap.contains(upperVerb)) {
+    if (commandMap.contains(rawVerb)) {
         // ERROR: Commands must be strictly ALL CAPS (e.g., NEW is valid, new is not)
-        if (rawVerb != upperVerb) {
+        if (rawVerb != rawVerb) {
             inst.isValid = false;
             return inst;
         }
-        inst.action = commandMap.value(upperVerb);
+        inst.action = commandMap.value(rawVerb);
     } else {
         inst.action = CMD_UNKNOWN;
     }
@@ -396,8 +396,8 @@ Instruction Interpreter::parse(QVector<Token> tokens) {
     case CMD_CREATE: // NEW VAR [DATA_TYPE] [NAME] [VALUE]
         if (tokens.size() == 5) {
             QString varName = tokens[3].value;
-            inst.category = typeMap.value(tokens[1].value.toUpper(), CMD_VARIABLE);
-            inst.dataType = dataTypeMap.value(tokens[2].value.toUpper(), CMD_NUMBER);
+            inst.category = typeMap.value(tokens[1].value, CMD_VARIABLE);
+            inst.dataType = dataTypeMap.value(tokens[2].value, CMD_NUMBER);
             inst.name     = varName;
             inst.value    = tokens[4].value;
             inst.isValid  = true;
@@ -406,16 +406,16 @@ Instruction Interpreter::parse(QVector<Token> tokens) {
 
     case CMD_UPDATE: // UPD VAR [NAME] [VALUE]
         if (tokens.size() == 4) {
-            inst.category = typeMap.value(tokens[1].value.toUpper(), CMD_VARIABLE);
+            inst.category = typeMap.value(tokens[1].value, CMD_VARIABLE);
             inst.name = tokens[2].value;
             inst.value = tokens[3].value;
             inst.isValid = true;
         }
         break;
 
-    case CMD_MATH: // MATH [OP] [TARGET] [ARGS...]
+    case CMD_MATH: // MATH [ACTION] [TARGET] [ARGS...]
         if (tokens.size() >= 4) {
-            inst.value = tokens[1].value.toUpper();
+            inst.value = tokens[1].value;
             inst.name = tokens[2].value;
             for (int i = 3; i < tokens.size(); ++i) inst.arguments.append(tokens[i]);
             inst.isValid = true;
@@ -445,17 +445,17 @@ Instruction Interpreter::parse(QVector<Token> tokens) {
 
     case CMD_HELP: // HELP [KEYWORD] or HELP
         inst.isValid = true;
-        if (tokens.size() == 2) inst.value = tokens[1].value.toUpper();
+        if (tokens.size() == 2) inst.value = tokens[1].value;
         break;
 
     case CMD_CLEAR:
         if (tokens.size() == 1) inst.isValid = true;;
         break;
 
-    case CMD_LOGIC: // LGC [TYPE] [TARGET] [ARG 1] (optional [ARG 2])
+    case CMD_LOGIC: // LGC [ACTION] [TARGET] [ARG 1] (optional [ARG 2])
         // Allow 4 tokens (for NOT) or 5 tokens (for EQ, AND, etc.)
         if (tokens.size() >= 4 && tokens.size() <= 5) {
-            inst.value = tokens[1].value.toUpper(); // e.g., "EQ", "AND", "NOT"
+            inst.value = tokens[1].value;          // e.g., "EQ", "AND", "NOT"
             inst.name = tokens[2].value;           // The result variable
             for (int i = 3; i < tokens.size(); ++i) {
                 inst.arguments.append(tokens[i]);
@@ -505,6 +505,14 @@ Instruction Interpreter::parse(QVector<Token> tokens) {
         if (tokens.size() == 1) inst.isValid = true;
         break;
 
+    case CMD_FILE_SYSTEM: // FL [ACTION] [ARGS...]
+        if (tokens.size() >= 2) {
+            inst.value = tokens[1].value; // e.g., "MKDIR"
+            for (int i = 2; i < tokens.size(); ++i) inst.arguments.append(tokens[i]);
+            inst.isValid = true;
+        }
+        break;
+
     default:
         inst.isValid = false;
         break;
@@ -544,8 +552,14 @@ QString Interpreter::execute(Instruction inst, QMap<QString, Variable> &memory) 
             return Logic::execute(inst, memory);
             break;
 
+        case CMD_FILE_SYSTEM:
+            return FileSystem::execute(inst, memory);
+
         case CMD_UNKNOWN:
             return "[ERROR] For developer. Command non-existent.";
+            break;
+
+        default:
             break;
     }
 

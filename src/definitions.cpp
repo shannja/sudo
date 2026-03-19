@@ -34,6 +34,16 @@ const QMap<QString, Commands> commandMap = {
     // Separate entity commands that does a specific action for a time.
     {"MATH", CMD_MATH},
     {"LGC", CMD_LOGIC},
+    {"FL", CMD_FILE_SYSTEM},
+    // {"SYS", CMD_SYSTEM_PROPERTIES},
+    // {"GRPH", CMD_GRAPHICS},
+
+    // For recording scripts etc.
+    {"REC", CMD_RECORD},
+    {"ENDREC", CMD_STOP_RECORD},
+
+    // Executing scripts.
+    {"EXEC", CMD_EXECUTE},
 
     // Application-specific command.
     {"CLR", CMD_CLEAR}, // Clears the terminal logs.
@@ -44,7 +54,8 @@ const QMap<QString, Commands> commandMap = {
  * Used with the 'NEW' command to specify what is being created.
  */
 const QMap<QString, Types> typeMap = {
-    {"VAR", CMD_VARIABLE}
+    {"VAR", CMD_VARIABLE},
+    {"SCRIPT", CMD_SCRIPT}
 };
 
 /**
@@ -62,8 +73,9 @@ const QMap<QString, DataTypes> dataTypeMap = {
  * Special keywords that represent global states or formatting controls.
  */
 const QMap<QString, SystemIdentifiers> systemIdentifiersMap = {
-    {"MEM", CMD_VARIABLES}, // Target for READ to dump all memory
-    {"EOL", CMD_ENDLINE}    // Injected into OUT to create a newline (\n)
+    {"MEM", CMD_VARIABLES},      // Target for READ to dump all memory
+    {"DIR", CMD_ROOT_DIRECTORY}, // Root directory
+    {"EOL", CMD_ENDLINE}         // Injected into OUT to create a newline (\n)
 };
 
 /**
@@ -80,8 +92,8 @@ const QMap<QString, MathOperations> mathOperationsMap = {
 };
 
 /**
- * @brief Logic Operation Map.
- * Specifically for the 'LOGIC' command to route calculation logic.
+ * @brief Logic and Math Operation Map.
+ * Specifically for the 'LGC' and 'MATH' command to route calculation and logic.
  */
 const QMap<QString, CompareOperations> compareOperationsMap = {
     // Comparison operators.
@@ -101,6 +113,17 @@ const QMap<QString, LogicOperations> logicOperationsMap = {
 };
 
 /**
+ * @brief File System Operation Map.
+ * Specifically for the 'FL' command to make folders and files.
+ */
+const QMap<QString, FileSystemOperations> fileSystemOperationsMap = {
+    {"MKDIR", CMD_MAKE_DIRECTORY},
+    {"RNDIR", CMD_RENAME_DIRECTORY},
+    {"RMDIR", CMD_REMOVE_DIRECTORY},
+    {"CD", CMD_CHANGE_DIRECTORY}
+};
+
+/**
  * @brief Master Reserved Word List.
  * A collection of every keyword in the language.
  * Core uses this to prevent users from naming a variable
@@ -111,4 +134,6 @@ const QStringList reservedWords =
     typeMap.keys() +
     dataTypeMap.keys() +
     systemIdentifiersMap.keys() +
-    mathOperationsMap.keys();
+    mathOperationsMap.keys() +
+    logicOperationsMap.keys() +
+    fileSystemOperationsMap.keys();
