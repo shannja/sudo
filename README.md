@@ -7,8 +7,10 @@ The idea is that it will sit on a minimal linux kernel (such as Alpine Linux) so
 
 Features:
 DSL - It uses a ASM like structure:
-      NEW VAR NUM x 10
-      Creates a number variable "x" that holds a value of 10.
+- NEW VAR NUM x 10 (Creates a number variable "x" that holds a value of 10)
+- NEW VAR BOOL y false (A boolean y)
+- MATH ADD x 15 (Adds "x" (10) and a literal value (15))
+- LGC EQ y x 10 (Compares "x" and 10, puts the value in "y")
 
 APP Development - Packages scripts into applications that can be used by the environment.
 Turing Complete - It has the basic components for logic such as control flow and loops.
