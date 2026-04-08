@@ -13,4 +13,5 @@ DSL - It uses a ASM like structure:
 - LGC EQ y x 10 (Compares "x" and 10, puts the value in "y")
 
 APP Development - Packages scripts into applications that can be used by the environment.
+
 Turing Complete - It has the basic components for logic such as control flow and loops.
